@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:app001/login.dart';
 import 'package:app001/widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
@@ -18,6 +20,26 @@ class _ProfileState extends State<Profile> {
     Color post = Color.fromARGB(255, 36, 36, 36);
     return SafeArea(
       child: Scaffold(
+        endDrawer: Container(
+          padding: EdgeInsets.all(8),
+          width: 200,
+          decoration: BoxDecoration(
+            color: background,
+          ),
+          child: Column(
+            children: [
+              ElevatedButton(
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => Login()),
+                        (route) => false);
+                  },
+                  child: CustomText('Logout', 20, Colors.white))
+            ],
+          ),
+        ),
         backgroundColor: background,
         appBar: ProfileAppBar(
           height: 65,

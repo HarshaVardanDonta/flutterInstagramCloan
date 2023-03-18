@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "281837293454",
+    "project_id": "waat-laga-denge",
+    "storage_bucket": "waat-laga-denge.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:281837293454:android:ac9dea83883f38d47bdedf",
+        "android_client_info": {
+          "package_name": "com.example.app001"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "281837293454-nce2gsrmkahqsumeek14ml2gef1r95s1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzuI_9lnlLKJvXyTpQKI_W6gfWQ3L7Hls"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "281837293454-nce2gsrmkahqsumeek14ml2gef1r95s1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

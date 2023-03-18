@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>281837293454-h2snjfioq5so9veoh3mfm5earsgfb1gr.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.281837293454-h2snjfioq5so9veoh3mfm5earsgfb1gr</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC0KopuwP0_ulx7i1w3GkxGAC7yMSzHVjI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>281837293454</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.app001</string>
+	<key>PROJECT_ID</key>
+	<string>waat-laga-denge</string>
+	<key>STORAGE_BUCKET</key>
+	<string>waat-laga-denge.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:281837293454:ios:af4332de7dc319b37bdedf</string>
+</dict>
+</plist>

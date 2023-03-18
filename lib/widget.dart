@@ -1,5 +1,6 @@
 // ignore_for_file: sized_box_for_whitespace, prefer_const_constructors, prefer_const_literals_to_create_immutables, must_be_immutable, non_constant_identifier_names, camel_case_types
 
+import 'package:app001/AddPost.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -17,6 +18,45 @@ Text CustomText(String x, double size, Color color) {
         GoogleFonts.poppins(textStyle: TextStyle(color: color, fontSize: size)),
   );
 }
+
+
+//  
+
+class CustomTextField extends StatefulWidget {
+  String hint;
+  TextEditingController controller;
+  bool? isObscure ;
+   CustomTextField({Key? key, required this.hint, required this.controller,this.isObscure}) : super(key: key);
+
+  @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      obscureText: widget.isObscure ?? false,
+      controller: widget.controller,
+      decoration: InputDecoration(
+        hintText: widget.hint,
+        hintStyle: TextStyle(color: Colors.black),
+        filled: true,
+        fillColor: Colors.grey[200],
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+      ),
+    );
+  }
+}
+
+// 
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   double height;
@@ -49,10 +89,11 @@ class CustomAappBarState extends State<CustomAppBar> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(
-                FontAwesomeIcons.squarePlus,
-                color: Colors.white,
-                size: 22,
+              IconButton(
+              onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>AddPost()));
+              },
+              icon: Icon(Icons.add_box_outlined,color: Colors.white,),
               ),
               SizedBox(width: 20),
               Stack(
@@ -554,10 +595,15 @@ class _ProfileAppBarState extends State<ProfileAppBar> {
                 color: Colors.white,
               ),
               SizedBox(width: 20),
-              Icon(
-                Icons.menu,
-                size: 30,
-                color: Colors.white,
+              GestureDetector(
+                onTap: (){
+                  Scaffold.of(context).openEndDrawer();
+                },
+                child: Icon(
+                  Icons.menu,
+                  size: 30,
+                  color: Colors.white,
+                ),
               )
             ],
           ),

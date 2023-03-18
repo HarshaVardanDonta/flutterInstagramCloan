@@ -17,6 +17,7 @@ class Main02 extends StatefulWidget {
 
 class _Main02State extends State<Main02> {
   int _selectedIndex = 0;
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -30,23 +31,28 @@ class _Main02State extends State<Main02> {
     Activity(),
     Profile(),
   ];
+
   @override
   Widget build(BuildContext context) {
     Color background = Color(0xff17181C);
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: Container(
-        height: 60,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(50))),
+        height: 80,
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           backgroundColor: background,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                label: '',
+                activeIcon: Icon(Icons.home_filled)),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: '',
+            ),
             BottomNavigationBarItem(
                 icon: Icon(Icons.video_collection_outlined), label: ''),
             BottomNavigationBarItem(
