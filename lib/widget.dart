@@ -1,11 +1,22 @@
 // ignore_for_file: sized_box_for_whitespace, prefer_const_constructors, prefer_const_literals_to_create_immutables, must_be_immutable, non_constant_identifier_names, camel_case_types
 
+import 'dart:io';
+
 import 'package:app001/AddPost.dart';
+import 'package:app001/ViewAllComments.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:marquee/marquee.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
+import 'homePage.dart';
+import 'main02.dart';
 
 Color post = Color.fromARGB(255, 36, 36, 36);
 Color bar = Color.fromARGB(255, 12, 13, 16);
@@ -19,14 +30,16 @@ Text CustomText(String x, double size, Color color) {
   );
 }
 
-
-//  
+//
 
 class CustomTextField extends StatefulWidget {
   String hint;
   TextEditingController controller;
-  bool? isObscure ;
-   CustomTextField({Key? key, required this.hint, required this.controller,this.isObscure}) : super(key: key);
+  bool? isObscure;
+
+  CustomTextField(
+      {Key? key, required this.hint, required this.controller, this.isObscure})
+      : super(key: key);
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -56,7 +69,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   }
 }
 
-// 
+//
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   double height;
@@ -90,10 +103,14 @@ class CustomAappBarState extends State<CustomAppBar> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               IconButton(
-              onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>AddPost()));
-              },
-              icon: Icon(Icons.add_box_outlined,color: Colors.white,),
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => AddPost()));
+                },
+                icon: Icon(
+                  Icons.add_box_outlined,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(width: 20),
               Stack(
@@ -133,6 +150,7 @@ class CustomAappBarState extends State<CustomAppBar> {
 
 class Avatars extends StatefulWidget {
   String userImage;
+
   Avatars({Key? key, required this.userImage}) : super(key: key);
 
   @override
@@ -172,6 +190,7 @@ class AavatarsState extends State<Avatars> {
 class StoryAvatar extends StatefulWidget {
   String userName;
   String userimage;
+
   StoryAvatar({Key? key, required this.userName, required this.userimage})
       : super(key: key);
 
@@ -193,7 +212,7 @@ class _StoryAvatarState extends State<StoryAvatar> {
               backgroundImage: AssetImage('assets/gradient.webp'),
               child: CircleAvatar(
                 radius: 30,
-                backgroundImage: AssetImage(widget.userimage),
+                backgroundImage: NetworkImage(widget.userimage),
               ),
             ),
           ),
@@ -207,23 +226,30 @@ class _StoryAvatarState extends State<StoryAvatar> {
 
 class Post extends StatefulWidget {
   String username;
+  String title;
   String userImage;
   String descTop;
   String likes;
-  String comment;
+  String latestComment;
   String timeLapsed;
-  String postImage;
+  List<dynamic> postImage;
+  List comments;
   String commentsNumber;
+  String postedBy;
+
   Post(
       {Key? key,
       required this.postImage,
+      required this.title,
       required this.descTop,
       required this.timeLapsed,
       required this.userImage,
       required this.likes,
-      required this.comment,
+      required this.latestComment,
+      required this.comments,
       required this.commentsNumber,
-      required this.username})
+      required this.username,
+      required this.postedBy})
       : super(key: key);
 
   @override
@@ -231,6 +257,15 @@ class Post extends StatefulWidget {
 }
 
 class _PostState extends State<Post> {
+  PageController _pageController = PageController(
+    initialPage: 0,
+  );
+  bool userAlreadyLiked = false;
+  bool expandComments = false;
+  TextEditingController commentController = TextEditingController();
+  FocusNode commentFocus = FocusNode();
+  var user = FirebaseAuth.instance.currentUser;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -252,7 +287,44 @@ class _PostState extends State<Post> {
                   children: [
                     SizedBox(width: 8),
                     CircleAvatar(
-                      backgroundImage: AssetImage(widget.userImage),
+                      radius: 20,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(50),
+                        child: Image.network(
+                          widget.userImage,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              height: 40,
+                              width: MediaQuery.of(context).size.width,
+                              decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 40,
+                              width: MediaQuery.of(context).size.width,
+                              decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Center(
+                                child: Icon(
+                                  Icons.error,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Column(
@@ -274,35 +346,146 @@ class _PostState extends State<Post> {
           SizedBox(height: 10),
           //image or video
           Container(
+            height: 500,
             width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(widget.postImage),
-            ),
+            child: PageView.builder(
+                physics: BouncingScrollPhysics(),
+                controller: _pageController,
+                itemCount: widget.postImage.length,
+                itemBuilder: (context, index) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      widget.postImage[index].toString(),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          height: 500,
+                          width: MediaQuery.of(context).size.width,
+                          decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 500,
+                          width: MediaQuery.of(context).size.width,
+                          decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Center(
+                            child: Icon(
+                              Icons.error,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                }),
+          ),
+          SizedBox(height: 10),
+          Align(
+            alignment: Alignment.center,
+            child: SmoothPageIndicator(
+                controller: _pageController,
+                effect: ExpandingDotsEffect(
+                    dotColor: Colors.grey,
+                    activeDotColor: Colors.white,
+                    dotHeight: 8,
+                    dotWidth: 8,
+                    expansionFactor: 4,
+                    spacing: 4),
+                count: widget.postImage.length),
           ),
           SizedBox(height: 10),
           //like
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SizedBox(
-                width: 120,
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      FontAwesomeIcons.heart,
-                      color: Colors.white,
+                    Column(
+                      children: [
+                        InkWell(
+                          borderRadius: BorderRadius.circular(50),
+                          splashColor: Colors.white,
+                          onTap: () async {
+                            CollectionReference _collectionRef =
+                                FirebaseFirestore.instance.collection('posts');
+                            QuerySnapshot querySnapshot =
+                                await _collectionRef.get();
+                            for (int i = 0;
+                                i < querySnapshot.docs.length;
+                                i++) {
+                              if (querySnapshot.docs[i]['title'] ==
+                                  "${widget.title}") {
+                                if (!querySnapshot.docs[i]['likedBy'].contains(
+                                    FirebaseAuth
+                                        .instance.currentUser!.displayName)) {
+                                  await FirebaseFirestore.instance
+                                      .collection('posts')
+                                      .doc(widget.title)
+                                      .update({
+                                    'likes': '${int.parse(widget.likes) + 1}',
+                                  });
+                                  await FirebaseFirestore.instance
+                                      .collection('posts')
+                                      .doc(widget.title)
+                                      .update({
+                                    'likedBy': FieldValue.arrayUnion([
+                                      FirebaseAuth
+                                          .instance.currentUser!.displayName
+                                    ])
+                                  });
+                                  setState(() {
+                                    userAlreadyLiked = true;
+                                  });
+                                  print("found");
+                                }
+                              }
+                            }
+                          },
+                          child: Icon(
+                            FontAwesomeIcons.heart,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        CustomText(widget.likes, 13, Colors.white),
+                      ],
                     ),
-                    Icon(
-                      FontAwesomeIcons.comment,
-                      color: Colors.white,
-                    ),
-                    Icon(
-                      FontAwesomeIcons.paperPlane,
-                      color: Colors.white,
-                      size: 21,
+                    SizedBox(width: 20),
+                    Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            setState(() {
+                              expandComments = !expandComments;
+                              commentFocus.requestFocus();
+                            });
+                          },
+                          child: Icon(
+                            FontAwesomeIcons.comment,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        CustomText(widget.commentsNumber, 13, Colors.white),
+                      ],
                     ),
                   ],
                 ),
@@ -313,14 +496,149 @@ class _PostState extends State<Post> {
               )
             ],
           ),
+          if (expandComments)
+            Container(
+              child: Row(
+                children: [
+                  Expanded(
+                      child: TextField(
+                          focusNode: commentFocus,
+                          controller: commentController,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Add a comment...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                          ))),
+                  Material(
+                      color: Colors.transparent,
+                      child: IconButton(
+                        onPressed: () async {
+                          if (commentController.text == "") {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text("Comment can't be empty")));
+                          } else {
+                            commentFocus.unfocus();
+                            await FirebaseFirestore.instance
+                                .collection('posts')
+                                .doc(widget.title)
+                                .update({
+                              'latestComment':
+                                  "${user!.displayName}:${commentController.text}",
+                              'commentsNumber':
+                                  '${int.parse(widget.commentsNumber) + 1}',
+                              'comments': FieldValue.arrayUnion([
+                                '${user!.displayName}:${commentController.text}'
+                              ])
+                            });
+                            commentController.clear();
+                            commentFocus.unfocus();
+                            setState(() {
+                              expandComments = false;
+                            });
+                          }
+                        },
+                        icon: Icon(Icons.send),
+                        color: Colors.white,
+                      )),
+                ],
+              ),
+            ),
+          SizedBox(height: 10),
+          CustomText('${widget.title}', 19, Colors.white),
           //comments
-          SizedBox(height: 8),
-          CustomText(widget.likes, 13, Colors.white),
-          SizedBox(height: 8),
-          CustomText(widget.username + " " + widget.comment, 13, Colors.white),
-          SizedBox(height: 8),
-          CustomText('View all ' + widget.commentsNumber + ' comments', 13,
-              Colors.grey),
+          if (widget.comments.length != 0) SizedBox(height: 8),
+          if (widget.comments.length != 0)
+            Row(
+              children: [
+                // Builder(builder: (context) {
+                //   int index = 0;
+                //   QuerySnapshot querySnapshot;
+                //   getData() async {
+                //     CollectionReference _collectionRef =
+                //         FirebaseFirestore.instance.collection('users');
+                //     querySnapshot = await _collectionRef.get();
+                //     for (int i = 0; i < querySnapshot.docs.length; i++) {
+                //       if (querySnapshot.docs[i]['displayName'] ==
+                //           "${widget.latestComment.split(':')[0]}") {
+                //         setState(() {
+                //           index = i;
+                //         });
+                //       }
+                //     }
+                //   }
+                //
+                //   getData();
+                //   return CircleAvatar(
+                //     radius: 15,
+                //     child: ClipRRect(
+                //       borderRadius: BorderRadius.circular(50),
+                //       child: Image.network(
+                //         querySnapshot.docs[index]['photoURL'],
+                //         loadingBuilder: (context, child, loadingProgress) {
+                //           if (loadingProgress == null) return child;
+                //           return Container(
+                //             height: 40,
+                //             width: MediaQuery.of(context).size.width,
+                //             decoration: BoxDecoration(
+                //                 color: Colors.black,
+                //                 borderRadius: BorderRadius.circular(10)),
+                //             child: Center(
+                //               child: CircularProgressIndicator(
+                //                 color: Colors.white,
+                //               ),
+                //             ),
+                //           );
+                //         },
+                //         errorBuilder: (context, error, stackTrace) {
+                //           return Container(
+                //             height: 40,
+                //             width: MediaQuery.of(context).size.width,
+                //             decoration: BoxDecoration(
+                //                 color: Colors.black,
+                //                 borderRadius: BorderRadius.circular(10)),
+                //             child: Center(
+                //               child: Icon(
+                //                 Icons.error,
+                //                 color: Colors.white,
+                //               ),
+                //             ),
+                //           );
+                //         },
+                //         fit: BoxFit.cover,
+                //       ),
+                //     ),
+                //   );
+                // }),
+                // SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width - 60,
+                      child: CustomText('${widget.latestComment.split(':')[1]}',
+                          13, Colors.white),
+                    ),
+                    CustomText('by ${widget.latestComment.split(':')[0]}', 9,
+                        Colors.grey)
+                  ],
+                ),
+              ],
+            ),
+          if (widget.comments.length != 0) SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) =>
+                      ViewAllComments(comments: widget.comments)));
+            },
+            child: CustomText('View all ' + widget.commentsNumber + ' comments',
+                13, Colors.grey),
+          ),
           SizedBox(height: 8),
           CustomText(widget.timeLapsed + ' ago', 13, Colors.grey),
           SizedBox(height: 10),
@@ -339,6 +657,7 @@ class Reel extends StatefulWidget {
   String location;
   String commentsNumber;
   String song;
+
   Reel(
       {Key? key,
       required this.url,
@@ -480,6 +799,7 @@ class searchWidget extends StatefulWidget {
   int main;
 
   String image;
+
   searchWidget(
       {Key? key, required this.cross, required this.image, required this.main})
       : super(key: key);
@@ -512,6 +832,7 @@ class ActivityAvatar extends StatefulWidget {
   String userName;
   Widget wid;
   Widget ending;
+
   ActivityAvatar(
       {Key? key,
       required this.ending,
@@ -557,6 +878,7 @@ class _ActivityAvatarState extends State<ActivityAvatar> {
 
 class ProfileAppBar extends StatefulWidget implements PreferredSizeWidget {
   double height;
+
   ProfileAppBar({Key? key, required this.height}) : super(key: key);
 
   @override
@@ -596,7 +918,7 @@ class _ProfileAppBarState extends State<ProfileAppBar> {
               ),
               SizedBox(width: 20),
               GestureDetector(
-                onTap: (){
+                onTap: () {
                   Scaffold.of(context).openEndDrawer();
                 },
                 child: Icon(
@@ -609,6 +931,94 @@ class _ProfileAppBarState extends State<ProfileAppBar> {
           ),
         )
       ]),
+    );
+  }
+}
+
+class ImageViewer extends StatefulWidget {
+  List<File> images;
+
+  ImageViewer({
+    Key? key,
+    required this.images,
+  }) : super(key: key);
+
+  @override
+  State<ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<ImageViewer> {
+  @override
+  Widget build(BuildContext context) {
+    return PhotoViewGallery.builder(
+      scrollPhysics: const BouncingScrollPhysics(),
+      itemCount: widget.images.length,
+      builder: (BuildContext context, int index) {
+        return PhotoViewGalleryPageOptions(
+          imageProvider: Image.file(widget.images[index]).image,
+        );
+      },
+    );
+  }
+}
+
+class StatusViewer extends StatefulWidget {
+  String url;
+
+  StatusViewer({Key? key, required this.url}) : super(key: key);
+
+  @override
+  State<StatusViewer> createState() => _StatusViewerState();
+}
+
+class _StatusViewerState extends State<StatusViewer>
+    with TickerProviderStateMixin {
+  // late AnimationController controller;
+
+  @override
+  void initState() {
+    // controller = AnimationController(
+    //   vsync: this,
+    //   duration: const Duration(seconds: 5),
+    // )..addListener(() {
+    //     setState(() {});
+    //   });
+    // controller.repeat(reverse: true);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Container(
+            //   height: MediaQuery.of(context).size.height * 0.01,
+            //   child: LinearProgressIndicator(
+            //     backgroundColor: Colors.black,
+            //     color: Colors.white,
+            //     value: controller.value,
+            //   ),
+            // ),
+
+            Expanded(
+              child: Container(
+                child: Image.network(
+                  widget.url,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

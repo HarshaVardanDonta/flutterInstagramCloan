@@ -1,6 +1,10 @@
 // ignore_for_file: camel_case_types, file_names, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'dart:convert';
+
+import 'package:app001/uploadStatusScreen.dart';
 import 'package:app001/widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class homePage extends StatefulWidget {
@@ -12,6 +16,7 @@ class homePage extends StatefulWidget {
 
 class _homePageState extends State<homePage> {
   Color background = Color(0xff17181C);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,88 +33,128 @@ class _homePageState extends State<homePage> {
               //stories
               SizedBox(
                 height: 95,
-                width: MediaQuery.of(context).size.width,
-                child: ListView(
-                  physics: BouncingScrollPhysics(),
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    Center(
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => StatusUpload()));
+                      },
                       child: Avatars(
                         userImage: 'assets/man.png',
                       ),
                     ),
-                    StoryAvatar(
-                      userName: 'jlo',
-                      userimage: 'assets/jlo.jpg',
-                    ),
-                    StoryAvatar(
-                      userName: 'jennyrubyjane',
-                      userimage: 'assets/jenny.jpg',
-                    ),
-                    StoryAvatar(
-                      userName: 'inna',
-                      userimage: 'assets/inna.jpg',
-                    ),
-                    StoryAvatar(
-                        userName: 'Drake', userimage: 'assets/drake.jpg'),
-                    StoryAvatar(
-                        userName: 'beyonce', userimage: 'assets/beyonce.jpg')
+                    Expanded(
+                        child: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('status')
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return Text('Something went wrong');
+                              }
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                              if (snapshot.hasData &&
+                                  snapshot.data!.docs.isNotEmpty) {
+                                final data = snapshot.data as QuerySnapshot;
+                                return ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: BouncingScrollPhysics(),
+                                    itemCount: data.docs.length,
+                                    scrollDirection: Axis.horizontal,
+                                    itemBuilder: (context, index) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      StatusViewer(
+                                                          url: data.docs[index]
+                                                              ['url'])));
+                                        },
+                                        child: StoryAvatar(
+                                            userName: data.docs[index]
+                                                    ['name'] ??
+                                                'Unknown',
+                                            userimage: data.docs[index]['url']),
+                                      );
+                                    });
+                              }
+                              return Center(
+                                  child: CustomText(
+                                      'Sorry No Posts', 20, Colors.white));
+                            })),
                   ],
                 ),
               ),
+              //
               //feed
               Divider(
                 thickness: 0.3,
                 color: Colors.grey,
               ),
-              Post(
-                descTop: 'Dubai',
-                userImage: 'assets/jlo.jpg',
-                username: 'jlo',
-                likes: '50,120 likes',
-                comment: 'Hi 😘',
-                commentsNumber: '1,000',
-                timeLapsed: '1 hr',
-                postImage: 'assets/jloPost.jpg',
-              ),
-              Post(
-                descTop: 'Siau Ibiza Hotel',
-                timeLapsed: '2 hr',
-                userImage: 'assets/inna.jpg',
-                likes: '40,421',
-                comment: 'in Ibiza 😘',
-                commentsNumber: '391',
-                username: 'inna',
-                postImage: 'assets/innaPost.jpg',
-              ),
-              Post(
-                  postImage: 'assets/jennyPost.jpg',
-                  descTop: 'Korea',
-                  timeLapsed: '4 hr',
-                  userImage: 'assets/jenny.jpg',
-                  likes: '5,235',
-                  comment: '😘😘',
-                  commentsNumber: '548',
-                  username: 'jennyrubyjane'),
-              Post(
-                  postImage: 'assets/drakePost.jpg',
-                  descTop: '',
-                  timeLapsed: '3 hr',
-                  userImage: 'assets/drake.jpg',
-                  likes: '6,414',
-                  comment: '11 years ago today. Drake released Marvins Room.',
-                  commentsNumber: '486',
-                  username: 'Drake'),
-              Post(
-                  postImage: 'assets/beyoncePost.jpg',
-                  descTop: 'British Vogue July 2022',
-                  timeLapsed: '6 hr',
-                  userImage: 'assets/beyonce.jpg',
-                  likes: '530,879',
-                  comment: '',
-                  commentsNumber: '1,568',
-                  username: 'beyonce'),
+              StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('posts')
+                      .orderBy('time', descending: true)
+                      .snapshots(),
+                  builder: (BuildContext context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Something went wrong');
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                      final data = snapshot.data as QuerySnapshot;
+                      return ListView.builder(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: data.docs.length,
+                          itemBuilder: (context, index) {
+                            DateTime now = DateTime.now();
+                            DateTime created = DateTime.parse(
+                                data.docs[index]['time'].toString());
+                            Duration difference = now.difference(created);
+                            String timeLapsed;
+                            if (difference.inMinutes > 59) {
+                              timeLapsed = difference.inHours.toString() + ' h';
+                            }
+                            if (difference.inHours > 23) {
+                              timeLapsed = difference.inDays.toString() + ' d';
+                            } else {
+                              timeLapsed =
+                                  difference.inMinutes.toString() + ' m';
+                            }
+                            return Post(
+                              postedBy: data.docs[index]['postBy'],
+                              title: data.docs[index]['title'],
+                              postImage: data.docs[index]['images'],
+                              descTop: data.docs[index]['desc'],
+                              timeLapsed: timeLapsed,
+                              userImage: data.docs[index]['userImage'],
+                              likes: data.docs[index]['likes'].toString(),
+                              comments: data.docs[index]['comments'],
+                              latestComment: data.docs[index]['latestComment'],
+                              commentsNumber:
+                                  data.docs[index]['commentsNumber'].toString(),
+                              username: data.docs[index]['postBy'] ?? '',
+                            );
+                          });
+                    }
+                    return Center(
+                        child: CustomText('Sorry No Posts', 20, Colors.white));
+                  }),
             ],
           ),
         ),

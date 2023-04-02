@@ -1,6 +1,7 @@
 import 'package:app001/login.dart';
 import 'package:app001/main02.dart';
 import 'package:app001/widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +16,7 @@ class _RegisterState extends State<Register> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passController = TextEditingController();
   TextEditingController pass2Controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,6 +68,18 @@ class _RegisterState extends State<Register> {
                       shape: StadiumBorder(),
                       content: Text("Register success."),
                     ));
+                    await FirebaseAuth.instance.currentUser!.updateProfile(
+                        photoURL: 'https://i.imgur.com/BoN9kdC.png',
+                        displayName: emailController.text.split('@')[0]);
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(emailController.text.split('@')[0])
+                        .set({
+                      'email': emailController.text,
+                      'password': passController.text,
+                      'displayName': emailController.text.split('@')[0],
+                      'photoURL': 'https://i.imgur.com/BoN9kdC.png',
+                    });
                     Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (context) => Main02()),

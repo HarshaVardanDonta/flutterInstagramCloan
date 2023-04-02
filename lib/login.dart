@@ -3,6 +3,7 @@
 import 'package:app001/Register.dart';
 import 'package:app001/main02.dart';
 import 'package:app001/widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,19 @@ class _LoginState extends State<Login> {
             await auth.signInWithCredential(credential);
 
         user = userCredential.user;
+
+        await FirebaseAuth.instance.currentUser!.updateProfile(
+            displayName: googleSignInAccount.displayName,
+            photoURL: googleSignInAccount.photoUrl);
+        var userUpdate = FirebaseAuth.instance.currentUser;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userUpdate!.displayName)
+            .set({
+          'email': userUpdate!.email,
+          'displayName': userUpdate!.displayName,
+          'photoURL': userUpdate!.photoURL
+        });
       } on FirebaseAuthException catch (e) {
         if (e.code == 'account-exists-with-different-credential') {
           // handle the error here
@@ -120,6 +134,19 @@ class _LoginState extends State<Login> {
                                 .signInWithEmailAndPassword(
                                     email: emailController.text,
                                     password: passController.text);
+                            await FirebaseAuth.instance.currentUser!
+                                .updateProfile(
+                                    displayName:
+                                        emailController.text.split('@')[0]);
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(emailController.text.split('@')[0])
+                                .set({
+                              'email': emailController.text,
+                              'password': passController.text,
+                              'displayName': emailController.text.split('@')[0],
+                              'photoURL': 'https://i.imgur.com/BoN9kdC.png',
+                            });
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(e.toString())));

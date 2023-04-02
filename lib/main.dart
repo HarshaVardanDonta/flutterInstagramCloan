@@ -14,6 +14,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+  );
   runApp(const MyApp());
 }
 
