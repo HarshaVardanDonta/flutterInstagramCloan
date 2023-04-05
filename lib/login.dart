@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:app001/Register.dart';
+import 'package:app001/Service/UserService.dart';
 import 'package:app001/main02.dart';
 import 'package:app001/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -73,6 +74,8 @@ class _LoginState extends State<Login> {
           'displayName': userUpdate!.displayName,
           'photoURL': userUpdate!.photoURL
         });
+        await UserService.registerUser(
+            name: userUpdate.displayName!, email: userUpdate.email!);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'account-exists-with-different-credential') {
           // handle the error here
@@ -147,6 +150,9 @@ class _LoginState extends State<Login> {
                               'displayName': emailController.text.split('@')[0],
                               'photoURL': 'https://i.imgur.com/BoN9kdC.png',
                             });
+                            await UserService.registerUser(
+                                name: emailController.text.split('@')[0],
+                                email: emailController.text);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(e.toString())));

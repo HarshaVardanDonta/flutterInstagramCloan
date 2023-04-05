@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:app001/EditProfile.dart';
 import 'package:app001/login.dart';
 import 'package:app001/widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -94,15 +95,23 @@ class _ProfileState extends State<Profile> {
                     Row(
                       children: [
                         Expanded(
-                          child: Container(
-                            height: 40,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(width: 1, color: Colors.white)),
-                            child: Center(
-                                child: CustomText(
-                                    'Edit profile', 15, Colors.white)),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EditProfile()));
+                            },
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      width: 1, color: Colors.white)),
+                              child: Center(
+                                  child: CustomText(
+                                      'Edit profile', 15, Colors.white)),
+                            ),
                           ),
                         ),
                         SizedBox(width: 5),
